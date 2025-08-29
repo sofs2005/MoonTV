@@ -372,7 +372,7 @@ async function _searchXimalaya(
 ): Promise<SearchResult[]> {
   const apiKey = process.env[apiSite.key_env];
   if (!apiKey) {
-    console.error(`API key for ${apiSite.name} not found in environment variables.`);
+    // console.error(`API key for ${apiSite.name} not found in environment variables.`);
     return [];
   }
 
@@ -406,7 +406,7 @@ async function _searchNetease(
 ): Promise<SearchResult[]> {
   const apiKey = process.env[apiSite.key_env];
   if (!apiKey) {
-    console.error(`API key for ${apiSite.name} not found in environment variables.`);
+    // console.error(`API key for ${apiSite.name} not found in environment variables.`);
     return [];
   }
 
@@ -459,7 +459,7 @@ export async function searchFromAudioApi(
         return [];
     }
   } catch (error) {
-    console.error(`Error searching from ${apiSite.name}:`, error);
+    // console.error(`Error searching from ${apiSite.name}:`, error);
     return [];
   }
 }
