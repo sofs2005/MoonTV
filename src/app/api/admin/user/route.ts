@@ -7,7 +7,7 @@ import { getConfig } from '@/lib/config';
 import { getStorage } from '@/lib/db';
 import { IStorage } from '@/lib/types';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // 支持的操作类型
 const ACTIONS = [
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
           });
           targetEntry =
             adminConfig.UserConfig.Users[
-              adminConfig.UserConfig.Users.length - 1
+            adminConfig.UserConfig.Users.length - 1
             ];
           break;
         }
