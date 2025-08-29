@@ -89,7 +89,7 @@ function PlayPageClient() {
   }, [blockAdEnabled]);
 
   // 视频基本信息
-  const [mediaType, setMediaType] = useState(
+  const [mediaType] = useState(
     (searchParams.get('type') as 'video' | 'audiobook' | 'music') || 'video'
   );
   const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || '');
@@ -417,7 +417,8 @@ function PlayPageClient() {
       setVideoUrl('');
       return;
     }
-    const newUrl = detailData?.episodes[episodeIndex] || '';
+    const episode = detailData.episodes[episodeIndex];
+    const newUrl = typeof episode === 'string' ? episode : episode?.url || '';
     if (newUrl !== videoUrl) {
       setVideoUrl(newUrl);
     }
@@ -1365,7 +1366,7 @@ function PlayPageClient() {
             name: '跳过片头片尾',
             html: '跳过片头片尾',
             switch: skipConfigRef.current.enable,
-            onSwitch: function (item) {
+            onSwitch: function (item: any) {
               const newConfig = {
                 ...skipConfigRef.current,
                 enable: !item.switch,
@@ -1599,7 +1600,7 @@ function PlayPageClient() {
 
   if (loading) {
     return (
-      <PageLayout activePath='/play'>
+      <PageLayout activePath='/play' children={
         <div className='flex items-center justify-center min-h-screen bg-transparent'>
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 动画影院图标 */}
@@ -1682,13 +1683,13 @@ function PlayPageClient() {
             </div>
           </div>
         </div>
-      </PageLayout>
+      } />
     );
   }
 
   if (error) {
     return (
-      <PageLayout activePath='/play'>
+      <PageLayout activePath='/play' children={
         <div className='flex items-center justify-center min-h-screen bg-transparent'>
           <div className='text-center max-w-md mx-auto px-6'>
             {/* 错误图标 */}
@@ -1750,7 +1751,7 @@ function PlayPageClient() {
             </div>
           </div>
         </div>
-      </PageLayout>
+      } />
     );
   }
 
