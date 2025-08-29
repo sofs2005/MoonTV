@@ -31,6 +31,15 @@ export interface AdminConfig {
     from: 'config' | 'custom';
     disabled?: boolean;
   }[];
+  AudioSourceConfig: {
+    key: string;
+    name: string;
+    api: string;
+    key_env: string;
+    contentType: 'audiobook' | 'music';
+    from: 'config' | 'custom';
+    disabled?: boolean;
+  }[];
 }
 
 export interface AdminConfigResult {

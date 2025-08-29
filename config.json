@@ -453,5 +453,19 @@
       "api": "https://www.fantuan.tv/api.php/provide/vod/",
       "name": "饭团影视"
     }
+  },
+  "api_audio_site": {
+    "ximalaya": {
+      "name": "喜马拉雅",
+      "api": "https://api.hhlqilongzhu.cn/api/Ximalaya",
+      "key_env": "XIMALAYA_API_KEY",
+      "contentType": "audiobook"
+    },
+    "netease": {
+      "name": "网易云音乐",
+      "api": "https://sdkapi.hhlqilongzhu.cn/api/dgMusic_wyy/",
+      "key_env": "NETEASE_API_KEY",
+      "contentType": "music"
+    }
   }
 }

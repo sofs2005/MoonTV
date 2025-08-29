@@ -1,4 +1,9 @@
-import { API_CONFIG, ApiSite, getConfig } from '@/lib/config';
+import {
+  API_CONFIG,
+  ApiAudioSite,
+  ApiSite,
+  getConfig,
+} from '@/lib/config';
 import { SearchResult } from '@/lib/types';
 import { cleanHtmlTags } from '@/lib/utils';
 
@@ -85,7 +90,7 @@ export async function searchFromApi(
           ? item.vod_year.match(/\d{4}/)?.[0] || ''
           : 'unknown',
         desc: cleanHtmlTags(item.vod_content || ''),
-        type_name: item.type_name,
+        type_name: 'video',
         douban_id: item.vod_douban_id,
       };
     });
@@ -158,7 +163,7 @@ export async function searchFromApi(
                   ? item.vod_year.match(/\d{4}/)?.[0] || ''
                   : 'unknown',
                 desc: cleanHtmlTags(item.vod_content || ''),
-                type_name: item.type_name,
+                type_name: 'video',
                 douban_id: item.vod_douban_id,
               };
             });
@@ -264,7 +269,7 @@ export async function getDetailFromApi(
       ? videoDetail.vod_year.match(/\d{4}/)?.[0] || ''
       : 'unknown',
     desc: cleanHtmlTags(videoDetail.vod_content),
-    type_name: videoDetail.type_name,
+    type_name: 'video',
     douban_id: videoDetail.vod_douban_id,
   };
 }
@@ -338,7 +343,124 @@ async function handleSpecialSourceDetail(
     class: '',
     year: yearText,
     desc: descText,
-    type_name: '',
+    type_name: 'video',
     douban_id: 0,
   };
 }
+
+// #region Audio Search
+interface XimalayaSearchItem {
+  title: string;
+  albumId: string;
+  cover: string;
+  type: string;
+  Nickname: string;
+}
+
+interface NeteaseSearchItem {
+  title: string;
+  singer: string;
+  cover: string;
+  link: string;
+  music_url: string;
+  lrc: string;
+}
+
+async function _searchXimalaya(
+  apiSite: ApiAudioSite,
+  query: string
+): Promise<SearchResult[]> {
+  const apiKey = process.env[apiSite.key_env];
+  if (!apiKey) {
+    console.error(`API key for ${apiSite.name} not found in environment variables.`);
+    return [];
+  }
+
+  const url = new URL(apiSite.api);
+  url.searchParams.append('name', query);
+  url.searchParams.append('key', apiKey);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) return [];
+
+  const data = await response.json();
+  if (!data || !Array.isArray(data.data)) return [];
+
+  return data.data.map((item: XimalayaSearchItem) => ({
+    id: item.albumId,
+    title: item.title,
+    poster: item.cover,
+    source: apiSite.key,
+    source_name: apiSite.name,
+    desc: `作者: ${item.Nickname}`,
+    class: item.type,
+    year: 'N/A',
+    episodes: [], // 详情页再获取
+    type_name: 'audiobook',
+  }));
+}
+
+async function _searchNetease(
+  apiSite: ApiAudioSite,
+  query: string
+): Promise<SearchResult[]> {
+  const apiKey = process.env[apiSite.key_env];
+  if (!apiKey) {
+    console.error(`API key for ${apiSite.name} not found in environment variables.`);
+    return [];
+  }
+
+  const url = new URL(apiSite.api);
+  url.searchParams.append('gm', query);
+  url.searchParams.append('key', apiKey);
+  url.searchParams.append('type', 'json');
+
+  const response = await fetch(url.toString());
+  if (!response.ok) return [];
+
+  const data = await response.json();
+  // The netease API returns a flat list of songs in text format when no specific number is requested.
+  // We need a different logic for detail fetching. For search, we assume it returns a JSON list if possible
+  // or we might need to adjust based on actual API behavior for search lists.
+  // This is a placeholder based on the provided plugin code which gets a single track with json type.
+  // A real search list might need parsing from text.
+  if (data.code !== 200) return [];
+
+  const item: NeteaseSearchItem = data;
+  return [
+    {
+      id: item.link, // Using link as a unique ID for now
+      title: item.title,
+      poster: item.cover,
+      source: apiSite.key,
+      source_name: apiSite.name,
+      desc: `歌手: ${item.singer}`,
+      class: '音乐',
+      year: 'N/A',
+      episodes: [{ name: '播放', url: item.music_url }],
+      type_name: 'music',
+    },
+  ];
+}
+
+export async function searchFromAudioApi(
+  apiSite: ApiAudioSite,
+  query: string
+): Promise<SearchResult[]> {
+  try {
+    switch (apiSite.contentType) {
+      case 'audiobook':
+        return await _searchXimalaya(apiSite, query);
+      case 'music':
+        // For now, netease search is simplified. It might need a more complex implementation
+        // if the search API returns a list instead of a single item.
+        return await _searchNetease(apiSite, query);
+      default:
+        return [];
+    }
+  } catch (error) {
+    console.error(`Error searching from ${apiSite.name}:`, error);
+    return [];
+  }
+}
+// #endregion

@@ -15,7 +15,9 @@ import {
 import { SearchResult } from '@/lib/types';
 import { yellowWords } from '@/lib/yellow';
 
+import CapsuleSwitch from '@/components/CapsuleSwitch';
 import PageLayout from '@/components/PageLayout';
+import SongCard from '@/components/SongCard';
 import VideoCard from '@/components/VideoCard';
 
 function SearchPageClient() {
@@ -30,6 +32,9 @@ function SearchPageClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchType, setSearchType] = useState<
+    'video' | 'audiobook' | 'music'
+  >('video');
 
   // 获取默认聚合设置：只读取用户本地设置，默认为 true
   const getDefaultAggregate = () => {
@@ -51,9 +56,8 @@ function SearchPageClient() {
     const map = new Map<string, SearchResult[]>();
     searchResults.forEach((item) => {
       // 使用 title + year + type 作为键，year 必然存在，但依然兜底 'unknown'
-      const key = `${item.title.replaceAll(' ', '')}-${
-        item.year || 'unknown'
-      }-${item.episodes.length === 1 ? 'movie' : 'tv'}`;
+      const key = `${item.title.replaceAll(' ', '')}-${item.year || 'unknown'
+        }-${item.episodes.length === 1 ? 'movie' : 'tv'}`;
       const arr = map.get(key) || [];
       arr.push(item);
       map.set(key, arr);
@@ -163,7 +167,9 @@ function SearchPageClient() {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(query.trim())}`
+        `/api/search?q=${encodeURIComponent(
+          query.trim()
+        )}&type=${searchType}`
       );
       const data = await response.json();
       let results = data.results;
@@ -261,6 +267,19 @@ function SearchPageClient() {
               />
             </div>
           </form>
+          <div className='mt-4 flex justify-center'>
+            <CapsuleSwitch
+              options={[
+                { label: '影视', value: 'video' },
+                { label: '有声书', value: 'audiobook' },
+                { label: '音乐', value: 'music' },
+              ]}
+              active={searchType}
+              onChange={(value) =>
+                setSearchType(value as 'video' | 'audiobook' | 'music')
+              }
+            />
+          </div>
         </div>
 
         {/* 搜索结果或搜索历史 */}
@@ -299,8 +318,17 @@ function SearchPageClient() {
                 key={`search-results-${viewMode}`}
                 className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
               >
-                {viewMode === 'agg'
-                  ? aggregatedResults.map(([mapKey, group]) => {
+                {searchType === 'music'
+                  ? searchResults.map((item) => (
+                    <div
+                      key={`music-${item.source}-${item.id}`}
+                      className='w-full'
+                    >
+                      <SongCard item={item} />
+                    </div>
+                  ))
+                  : viewMode === 'agg'
+                    ? aggregatedResults.map(([mapKey, group]) => {
                       return (
                         <div key={`agg-${mapKey}`} className='w-full'>
                           <VideoCard
@@ -315,7 +343,7 @@ function SearchPageClient() {
                         </div>
                       );
                     })
-                  : searchResults.map((item) => (
+                    : searchResults.map((item) => (
                       <div
                         key={`all-${item.source}-${item.id}`}
                         className='w-full'
@@ -335,7 +363,9 @@ function SearchPageClient() {
                           }
                           year={item.year}
                           from='search'
-                          type={item.episodes.length > 1 ? 'tv' : 'movie'}
+                          type={
+                            (item.episodes || []).length > 1 ? 'tv' : 'movie'
+                          }
                         />
                       </div>
                     ))}
@@ -399,11 +429,10 @@ function SearchPageClient() {
       {/* 返回顶部悬浮按钮 */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-green-500/90 hover:bg-green-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${
-          showBackToTop
+        className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-green-500/90 hover:bg-green-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${showBackToTop
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'
-        }`}
+          }`}
         aria-label='返回顶部'
       >
         <ChevronUp className='w-6 h-6 transition-transform group-hover:scale-110' />

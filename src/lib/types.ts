@@ -81,18 +81,25 @@ export interface IStorage {
   getAllSkipConfigs(userName: string): Promise<{ [key: string]: SkipConfig }>;
 }
 
+// 单集数据结构
+export interface Episode {
+  name: string;
+  url: string;
+  // 可以添加更多字段，如音质、格式等
+}
+
 // 搜索结果数据结构
 export interface SearchResult {
   id: string;
   title: string;
   poster: string;
-  episodes: string[];
+  episodes: (string | Episode)[];
   source: string;
   source_name: string;
   class?: string;
   year: string;
   desc?: string;
-  type_name?: string;
+  type_name?: 'video' | 'audiobook' | 'music';
   douban_id?: number;
 }
 

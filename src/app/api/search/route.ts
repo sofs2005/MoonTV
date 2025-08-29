@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 
-import { getCacheTime, getConfig } from '@/lib/config';
-import { searchFromApi } from '@/lib/downstream';
+import {
+  getAvailableAudioApiSites,
+  getCacheTime,
+  getConfig,
+} from '@/lib/config';
+import { searchFromApi, searchFromAudioApi } from '@/lib/downstream';
 import { yellowWords } from '@/lib/yellow';
 
 export const runtime = 'edge';
@@ -9,6 +13,10 @@ export const runtime = 'edge';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
+  const type = (searchParams.get('type') || 'video') as
+    | 'video'
+    | 'audiobook'
+    | 'music';
 
   if (!query) {
     const cacheTime = await getCacheTime();
@@ -25,8 +33,19 @@ export async function GET(request: Request) {
   }
 
   const config = await getConfig();
-  const apiSites = config.SourceConfig.filter((site) => !site.disabled);
-  const searchPromises = apiSites.map((site) => searchFromApi(site, query));
+  let searchPromises;
+
+  if (type === 'video') {
+    const apiSites = config.SourceConfig.filter((site) => !site.disabled);
+    searchPromises = apiSites.map((site) => searchFromApi(site, query));
+  } else {
+    const audioApiSites = (await getAvailableAudioApiSites()).filter(
+      (site) => site.contentType === type
+    );
+    searchPromises = audioApiSites.map((site) =>
+      searchFromAudioApi(site, query)
+    );
+  }
 
   try {
     const results = await Promise.all(searchPromises);

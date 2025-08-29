@@ -12,10 +12,21 @@ export interface ApiSite {
   detail?: string;
 }
 
+export interface ApiAudioSite {
+  key: string;
+  name: string;
+  api: string;
+  key_env: string;
+  contentType: 'audiobook' | 'music';
+}
+
 interface ConfigFileStruct {
   cache_time?: number;
   api_site: {
     [key: string]: ApiSite;
+  };
+  api_audio_site?: {
+    [key: string]: ApiAudioSite;
   };
   custom_category?: {
     name?: string;
@@ -223,16 +234,41 @@ async function initConfig() {
             from: 'config',
             disabled: false,
           })),
+          AudioSourceConfig: [], // Provide default value
         };
+        // 初始化 AudioSourceConfig
+        if (adminConfig) {
+          if (!adminConfig.AudioSourceConfig) {
+            adminConfig.AudioSourceConfig = [];
+          }
+          const audioApiSiteEntries = Object.entries(
+            fileConfig.api_audio_site || {}
+          );
+          adminConfig.AudioSourceConfig = audioApiSiteEntries.map(
+            ([key, site]) => ({
+              key,
+              name: site.name,
+              api: site.api,
+              key_env: site.key_env,
+              contentType: site.contentType,
+              from: 'config',
+              disabled: false,
+            })
+          );
+        }
       }
 
       // 写回数据库（更新/创建）
       if (storage && typeof (storage as any).setAdminConfig === 'function') {
-        await (storage as any).setAdminConfig(adminConfig);
+        if (adminConfig) {
+          await (storage as any).setAdminConfig(adminConfig);
+        }
       }
 
       // 更新缓存
-      cachedConfig = adminConfig;
+      if (adminConfig) {
+        cachedConfig = adminConfig;
+      }
     } catch (err) {
       console.error('加载管理员配置失败:', err);
     }
@@ -272,7 +308,19 @@ async function initConfig() {
           from: 'config',
           disabled: false,
         })) || [],
+      AudioSourceConfig: [], // Provide default value
     } as AdminConfig;
+    // localstorage 模式下处理 audio sources
+    const audioApiSiteEntries = Object.entries(fileConfig.api_audio_site || {});
+    cachedConfig.AudioSourceConfig = audioApiSiteEntries.map(([key, site]) => ({
+      key,
+      name: site.name,
+      api: site.api,
+      key_env: site.key_env,
+      contentType: site.contentType,
+      from: 'config',
+      disabled: false,
+    }));
   }
 }
 
@@ -346,6 +394,42 @@ export async function getConfig(): Promise<AdminConfig> {
 
     // 将 Map 转换回数组
     adminConfig.SourceConfig = Array.from(sourceConfigMap.values());
+
+    // 合并文件中的音频源信息
+    const audioApiSiteEntries = Object.entries(fileConfig.api_audio_site || {});
+    if (!adminConfig.AudioSourceConfig) {
+      adminConfig.AudioSourceConfig = [];
+    }
+    const audioSourceConfigMap = new Map(
+      (adminConfig.AudioSourceConfig || []).map((s) => [s.key, s])
+    );
+    audioApiSiteEntries.forEach(([key, site]) => {
+      const existingSource = audioSourceConfigMap.get(key);
+      if (existingSource) {
+        existingSource.name = site.name;
+        existingSource.api = site.api;
+        existingSource.key_env = site.key_env;
+        existingSource.contentType = site.contentType;
+        existingSource.from = 'config';
+      } else {
+        audioSourceConfigMap.set(key, {
+          key,
+          name: site.name,
+          api: site.api,
+          key_env: site.key_env,
+          contentType: site.contentType,
+          from: 'config',
+          disabled: false,
+        });
+      }
+    });
+    const audioApiSiteKeys = new Set(audioApiSiteEntries.map(([key]) => key));
+    audioSourceConfigMap.forEach((source) => {
+      if (!audioApiSiteKeys.has(source.key)) {
+        source.from = 'custom';
+      }
+    });
+    adminConfig.AudioSourceConfig = Array.from(audioSourceConfigMap.values());
 
     // 覆盖 CustomCategories
     const customCategories = fileConfig.custom_category || [];
@@ -456,14 +540,26 @@ export async function resetConfig() {
     CustomCategories:
       storageType === 'redis'
         ? customCategories?.map((category) => ({
-            name: category.name,
-            type: category.type,
-            query: category.query,
-            from: 'config',
-            disabled: false,
-          })) || []
+          name: category.name,
+          type: category.type,
+          query: category.query,
+          from: 'config',
+          disabled: false,
+        })) || []
         : [],
+    AudioSourceConfig: [], // Provide default value
   } as AdminConfig;
+  // 重置时处理 audio sources
+  const audioApiSiteEntries = Object.entries(fileConfig.api_audio_site || {});
+  adminConfig.AudioSourceConfig = audioApiSiteEntries.map(([key, site]) => ({
+    key,
+    name: site.name,
+    api: site.api,
+    key_env: site.key_env,
+    contentType: site.contentType,
+    from: 'config',
+    disabled: false,
+  }));
 
   if (storage && typeof (storage as any).setAdminConfig === 'function') {
     await (storage as any).setAdminConfig(adminConfig);
@@ -491,4 +587,17 @@ export async function getAvailableApiSites(): Promise<ApiSite[]> {
     api: s.api,
     detail: s.detail,
   }));
+}
+
+export async function getAvailableAudioApiSites(): Promise<ApiAudioSite[]> {
+  const config = await getConfig();
+  return (config.AudioSourceConfig || [])
+    .filter((s) => !s.disabled)
+    .map((s) => ({
+      key: s.key,
+      name: s.name,
+      api: s.api,
+      key_env: s.key_env,
+      contentType: s.contentType,
+    }));
 }
