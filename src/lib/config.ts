@@ -165,6 +165,48 @@ async function initConfig() {
         // 将 Map 转换回数组
         adminConfig.CustomCategories = Array.from(customCategoriesMap.values());
 
+        // 补全 AudioSourceConfig
+        const audioApiSiteEntries = Object.entries(
+          fileConfig.api_audio_site || {}
+        );
+        if (!adminConfig.AudioSourceConfig) {
+          adminConfig.AudioSourceConfig = [];
+        }
+        const audioSourceConfigMap = new Map(
+          (adminConfig.AudioSourceConfig || []).map((s) => [s.key, s])
+        );
+        audioApiSiteEntries.forEach(([key, site]) => {
+          const existingSource = audioSourceConfigMap.get(key);
+          if (existingSource) {
+            existingSource.name = site.name;
+            existingSource.api = site.api;
+            existingSource.key_env = site.key_env;
+            existingSource.contentType = site.contentType;
+            existingSource.from = 'config';
+          } else {
+            audioSourceConfigMap.set(key, {
+              key,
+              name: site.name,
+              api: site.api,
+              key_env: site.key_env,
+              contentType: site.contentType,
+              from: 'config',
+              disabled: false,
+            });
+          }
+        });
+        const audioApiSiteKeys = new Set(
+          audioApiSiteEntries.map(([key]) => key)
+        );
+        audioSourceConfigMap.forEach((source) => {
+          if (!audioApiSiteKeys.has(source.key)) {
+            source.from = 'custom';
+          }
+        });
+        adminConfig.AudioSourceConfig = Array.from(
+          audioSourceConfigMap.values()
+        );
+
         const existedUsers = new Set(
           (adminConfig.UserConfig.Users || []).map((u) => u.username)
         );

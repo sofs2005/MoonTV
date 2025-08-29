@@ -53,10 +53,13 @@ function SearchPageClient() {
 
   // 聚合后的结果（按标题和年份分组）
   const aggregatedResults = useMemo(() => {
+    if (searchType === 'music') {
+      return [];
+    }
     const map = new Map<string, SearchResult[]>();
     searchResults.forEach((item) => {
       // 使用 title + year + type 作为键，year 必然存在，但依然兜底 'unknown'
-      const key = `${item.title.replaceAll(' ', '')}-${item.year || 'unknown'
+      const key = `${(item.title || '').replaceAll(' ', '')}-${item.year || 'unknown'
         }-${item.episodes.length === 1 ? 'movie' : 'tv'}`;
       const arr = map.get(key) || [];
       arr.push(item);
@@ -64,10 +67,12 @@ function SearchPageClient() {
     });
     return Array.from(map.entries()).sort((a, b) => {
       // 优先排序：标题与搜索词完全一致的排在前面
-      const aExactMatch = a[1][0].title
+      const aTitle = a[1][0].title || '';
+      const bTitle = b[1][0].title || '';
+      const aExactMatch = aTitle
         .replaceAll(' ', '')
         .includes(searchQuery.trim().replaceAll(' ', ''));
-      const bExactMatch = b[1][0].title
+      const bExactMatch = bTitle
         .replaceAll(' ', '')
         .includes(searchQuery.trim().replaceAll(' ', ''));
 
@@ -94,7 +99,7 @@ function SearchPageClient() {
         }
       }
     });
-  }, [searchResults]);
+  }, [searchResults, searchType, searchQuery]);
 
   useEffect(() => {
     // 无搜索参数时聚焦搜索框
@@ -430,8 +435,8 @@ function SearchPageClient() {
       <button
         onClick={scrollToTop}
         className={`fixed bottom-20 md:bottom-6 right-6 z-[500] w-12 h-12 bg-green-500/90 hover:bg-green-500 text-white rounded-full shadow-lg backdrop-blur-sm transition-all duration-300 ease-in-out flex items-center justify-center group ${showBackToTop
-            ? 'opacity-100 translate-y-0 pointer-events-auto'
-            : 'opacity-0 translate-y-4 pointer-events-none'
+          ? 'opacity-100 translate-y-0 pointer-events-auto'
+          : 'opacity-0 translate-y-4 pointer-events-none'
           }`}
         aria-label='返回顶部'
       >
