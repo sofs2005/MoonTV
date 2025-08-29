@@ -372,7 +372,7 @@ async function _searchXimalaya(
 ): Promise<SearchResult[]> {
   const apiKey = process.env.XIMALAYA_API_KEY;
   if (!apiKey) {
-    console.error(`API key for ${apiSite.name} not found in environment variables.`);
+    // console.error(`API key for ${apiSite.name} not found in environment variables.`);
     return [];
   }
 
@@ -406,41 +406,48 @@ async function _searchNetease(
 ): Promise<SearchResult[]> {
   const apiKey = process.env.NETEASE_API_KEY;
   if (!apiKey) {
-    console.error(`API key for ${apiSite.name} not found in environment variables.`);
+    // console.error(`API key for ${apiSite.name} not found in environment variables.`);
     return [];
   }
 
   const url = new URL(apiSite.api);
   url.searchParams.append('gm', query);
   url.searchParams.append('key', apiKey);
-  url.searchParams.append('type', 'json');
+  // Do not set type=json, as we need to parse the text list
 
   const response = await fetch(url.toString());
   if (!response.ok) return [];
 
-  const data = await response.json();
-  // The netease API returns a flat list of songs in text format when no specific number is requested.
-  // We need a different logic for detail fetching. For search, we assume it returns a JSON list if possible
-  // or we might need to adjust based on actual API behavior for search lists.
-  // This is a placeholder based on the provided plugin code which gets a single track with json type.
-  // A real search list might need parsing from text.
-  if (data.code !== 200) return [];
+  const textData = await response.text();
+  if (!textData) return [];
 
-  const item: NeteaseSearchItem = data;
-  return [
-    {
-      id: item.link, // Using link as a unique ID for now
-      title: item.title,
-      poster: item.cover,
-      source: apiSite.key,
-      source_name: apiSite.name,
-      desc: `歌手: ${item.singer}`,
-      class: '音乐',
-      year: 'N/A',
-      episodes: [{ name: '播放', url: item.music_url }],
-      type_name: 'music',
-    },
-  ];
+  const lines = textData.split('\n').filter((line) => line.trim() !== '');
+  const results: SearchResult[] = [];
+
+  for (const line of lines) {
+    const match = line.match(/(\d+)?、(.+?) -- (.+)/);
+    if (match) {
+      const [, , title, singer] = match;
+      // To get song details like cover and URL, we would need to make another API call per song.
+      // This is inefficient. For now, we create a placeholder.
+      // A better approach would be if the API supported a JSON list directly.
+      // As a workaround, we will pass enough info to the play page to re-fetch details.
+      results.push({
+        id: `${title} -- ${singer}`, // Create a temporary unique ID
+        title: title.trim(),
+        poster: '', // No poster available from the text list
+        source: apiSite.key,
+        source_name: apiSite.name,
+        desc: `歌手: ${singer.trim()}`,
+        class: '音乐',
+        year: 'N/A',
+        episodes: [], // Will be fetched on the play page
+        type_name: 'music',
+      });
+    }
+  }
+
+  return results;
 }
 
 export async function searchFromAudioApi(

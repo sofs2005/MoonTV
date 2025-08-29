@@ -10,9 +10,19 @@ interface SongCardProps {
 }
 
 const SongCard: React.FC<SongCardProps> = ({ item }) => {
+  // Safety check: If episodes array is empty, do not render the card.
+  if (!item.episodes || item.episodes.length === 0) {
+    return null;
+  }
+
   // For music, episodes array will contain Episode objects.
   // We assume the first one is the one to play.
   const episode = item.episodes[0] as { name: string; url: string };
+
+  // Additional safety check in case the episode object is malformed.
+  if (!episode || !episode.url) {
+    return null;
+  }
 
   return (
     <div className='w-full'>

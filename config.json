@@ -457,7 +457,7 @@
   "api_audio_site": {
     "ximalaya": {
       "name": "喜马拉雅",
-      "api": "https://api.hhlqilongzhu.cn/api/Ximalaya",
+      "api": "https://sdkapi.hhlqilongzhu.cn/api/ximalaya/",
       "key_env": "XIMALAYA_API_KEY",
       "contentType": "audiobook"
     },
