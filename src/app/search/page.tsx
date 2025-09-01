@@ -168,6 +168,14 @@ function SearchPageClient() {
     }
   }, [searchParams]);
 
+  // Add a new useEffect to re-fetch results when searchType changes
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (query) {
+      fetchSearchResults(query);
+    }
+  }, [searchType]);
+
   const fetchSearchResults = async (query: string) => {
     try {
       setIsLoading(true);
