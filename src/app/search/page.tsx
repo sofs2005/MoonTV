@@ -3,7 +3,7 @@
 
 import { ChevronUp, Search, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   addSearchHistory,
@@ -154,6 +154,63 @@ function SearchPageClient() {
     };
   }, []);
 
+  const fetchSearchResults = useCallback(
+    async (query: string) => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(
+          `/api/search?q=${encodeURIComponent(
+            query.trim()
+          )}&type=${searchType}`
+        );
+        const data = await response.json();
+        let results = data.results;
+        if (
+          typeof window !== 'undefined' &&
+          !(window as any).RUNTIME_CONFIG?.DISABLE_YELLOW_FILTER
+        ) {
+          results = results.filter((result: SearchResult) => {
+            const typeName = result.type_name || '';
+            return !yellowWords.some((word: string) => typeName.includes(word));
+          });
+        }
+        setSearchResults(
+          results.sort((a: SearchResult, b: SearchResult) => {
+            // 优先排序：标题与搜索词完全一致的排在前面
+            const aExactMatch = a.title === query.trim();
+            const bExactMatch = b.title === query.trim();
+
+            if (aExactMatch && !bExactMatch) return -1;
+            if (!aExactMatch && bExactMatch) return 1;
+
+            // 如果都匹配或都不匹配，则按原来的逻辑排序
+            if (a.year === b.year) {
+              return a.title.localeCompare(b.title);
+            } else {
+              // 处理 unknown 的情况
+              if (a.year === 'unknown' && b.year === 'unknown') {
+                return 0;
+              } else if (a.year === 'unknown') {
+                return 1; // a 排在后面
+              } else if (b.year === 'unknown') {
+                return -1; // b 排在后面
+              } else {
+                // 都是数字年份，按数字大小排序（大的在前面）
+                return parseInt(a.year) > parseInt(b.year) ? -1 : 1;
+              }
+            }
+          })
+        );
+        setShowResults(true);
+      } catch (error) {
+        setSearchResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [searchType]
+  );
+
   useEffect(() => {
     // 当搜索参数变化时更新搜索状态
     const query = searchParams.get('q');
@@ -166,7 +223,7 @@ function SearchPageClient() {
     } else {
       setShowResults(false);
     }
-  }, [searchParams]);
+  }, [searchParams, fetchSearchResults]);
 
   // Add a new useEffect to re-fetch results when searchType changes
   useEffect(() => {
@@ -174,61 +231,7 @@ function SearchPageClient() {
     if (query) {
       fetchSearchResults(query);
     }
-  }, [searchType]);
-
-  const fetchSearchResults = async (query: string) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(
-        `/api/search?q=${encodeURIComponent(
-          query.trim()
-        )}&type=${searchType}`
-      );
-      const data = await response.json();
-      let results = data.results;
-      if (
-        typeof window !== 'undefined' &&
-        !(window as any).RUNTIME_CONFIG?.DISABLE_YELLOW_FILTER
-      ) {
-        results = results.filter((result: SearchResult) => {
-          const typeName = result.type_name || '';
-          return !yellowWords.some((word: string) => typeName.includes(word));
-        });
-      }
-      setSearchResults(
-        results.sort((a: SearchResult, b: SearchResult) => {
-          // 优先排序：标题与搜索词完全一致的排在前面
-          const aExactMatch = a.title === query.trim();
-          const bExactMatch = b.title === query.trim();
-
-          if (aExactMatch && !bExactMatch) return -1;
-          if (!aExactMatch && bExactMatch) return 1;
-
-          // 如果都匹配或都不匹配，则按原来的逻辑排序
-          if (a.year === b.year) {
-            return a.title.localeCompare(b.title);
-          } else {
-            // 处理 unknown 的情况
-            if (a.year === 'unknown' && b.year === 'unknown') {
-              return 0;
-            } else if (a.year === 'unknown') {
-              return 1; // a 排在后面
-            } else if (b.year === 'unknown') {
-              return -1; // b 排在后面
-            } else {
-              // 都是数字年份，按数字大小排序（大的在前面）
-              return parseInt(a.year) > parseInt(b.year) ? -1 : 1;
-            }
-          }
-        })
-      );
-      setShowResults(true);
-    } catch (error) {
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [searchType, searchQuery, fetchSearchResults]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
