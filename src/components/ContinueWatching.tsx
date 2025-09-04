@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 
-import type { PlayRecord } from '@/lib/db.client';
+import { PlayRecord } from '@/lib/types';
 import {
   clearAllPlayRecords,
   getAllPlayRecords,
