@@ -398,7 +398,7 @@ export async function getXimalayaTrackDetail(
   apiSite: ApiAudioSite,
   trackId: string
 ): Promise<XimalayaTrackDetailItem> {
-  const apiKey = process.env.XIMALAYA_API_KEY;
+  const apiKey = process.env[apiSite.key_env];
   if (!apiKey) {
     throw new Error(
       `API key for ${apiSite.name} not found in environment variables.`
@@ -426,7 +426,7 @@ async function _searchXimalaya(
   apiSite: ApiAudioSite,
   query: string
 ): Promise<SearchResult[]> {
-  const apiKey = process.env.XIMALAYA_API_KEY;
+  const apiKey = process.env[apiSite.key_env];
   if (!apiKey) {
     // console.error(`API key for ${apiSite.name} not found in environment variables.`);
     return [];
@@ -460,7 +460,7 @@ async function _getXimalayaAlbumDetail(
   apiSite: ApiAudioSite,
   albumId: string
 ): Promise<SearchResult> {
-  const apiKey = process.env.XIMALAYA_API_KEY;
+  const apiKey = process.env[apiSite.key_env];
   if (!apiKey) {
     throw new Error(
       `API key for ${apiSite.name} not found in environment variables.`
@@ -505,7 +505,7 @@ async function _searchNetease(
   apiSite: ApiAudioSite,
   query: string
 ): Promise<SearchResult[]> {
-  const apiKey = process.env.NETEASE_API_KEY;
+  const apiKey = process.env[apiSite.key_env];
   if (!apiKey) {
     // console.error(`API key for ${apiSite.name} not found in environment variables.`);
     return [];
