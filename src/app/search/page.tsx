@@ -3,7 +3,7 @@
 
 import { ChevronUp, Search, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 
 import {
   addSearchHistory,
@@ -163,9 +163,6 @@ function SearchPageClient() {
   // Main effect for fetching search results
   useEffect(() => {
     const fetchSearchResults = async () => {
-      console.log(
-        `Fetching results for query: "${queryFromUrl}", type: "${searchType}"`
-      );
       if (!queryFromUrl) {
         setShowResults(false);
         setSearchResults([]);
@@ -180,7 +177,6 @@ function SearchPageClient() {
         const url = `/api/search?q=${encodeURIComponent(
           queryFromUrl
         )}&type=${searchType}`;
-        console.log('Requesting URL:', url);
         const response = await fetch(url);
         const data = await response.json();
         let results = data.results;
@@ -272,7 +268,6 @@ function SearchPageClient() {
               active={searchType}
               onChange={(value) => {
                 const newType = value as 'video' | 'audiobook' | 'music';
-                console.log('Search type changed to:', newType);
                 setSearchType(newType);
               }}
             />

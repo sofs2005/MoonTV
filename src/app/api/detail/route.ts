@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import {
+  ApiSite,
   getAvailableApiSites,
   getAvailableAudioApiSites,
   getCacheTime,
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
     const audioApiSites = await getAvailableAudioApiSites();
     const allApiSites = [
       ...videoApiSites,
-      ...(audioApiSites as any), // Use type assertion to merge
+      ...(audioApiSites as ApiSite[]), // Use type assertion to merge
     ];
     const apiSite = allApiSites.find((site) => site.key === sourceCode);
 

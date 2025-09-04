@@ -21,7 +21,7 @@ import {
   saveSkipConfig,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
-import { SearchResult } from '@/lib/types';
+import { Favorite, PlayRecord, SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
 import EpisodeSelector from '@/components/EpisodeSelector';
@@ -89,7 +89,7 @@ function PlayPageClient() {
   }, [blockAdEnabled]);
 
   // 视频基本信息
-  const [mediaType, setMediaType] = useState(
+  const [mediaType] = useState(
     (searchParams.get('mediaType') as 'video' | 'audiobook' | 'music') ||
     'video'
   );
@@ -1119,10 +1119,10 @@ function PlayPageClient() {
     }
 
     try {
-      await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
+      const record: PlayRecord = {
         title: videoTitleRef.current,
         source_name: detailRef.current?.source_name || '',
-        year: detailRef.current?.year,
+        year: detailRef.current?.year || '',
         cover: videoCover || detailRef.current?.poster || '',
         index: currentEpisodeIndexRef.current + 1, // 转换为1基索引
         total_episodes: detailRef.current?.episodes.length || 1,
@@ -1132,7 +1132,12 @@ function PlayPageClient() {
         search_title: searchTitle,
         mediaType: mediaType,
         desc: videoDesc || detailRef.current?.desc || '',
-      });
+      };
+      await savePlayRecord(
+        currentSourceRef.current,
+        currentIdRef.current,
+        record
+      );
 
       lastSaveTimeRef.current = Date.now();
       console.log('播放进度已保存:', {
@@ -1228,17 +1233,22 @@ function PlayPageClient() {
         setFavorited(false);
       } else {
         // 如果未收藏，添加收藏
-        await saveFavorite(currentSourceRef.current, currentIdRef.current, {
+        const favorite: Favorite = {
           title: videoTitleRef.current,
           source_name: detailRef.current?.source_name || '',
-          year: detailRef.current?.year,
+          year: detailRef.current?.year || '',
           cover: videoCover || detailRef.current?.poster || '',
           total_episodes: detailRef.current?.episodes.length || 1,
           save_time: Date.now(),
           search_title: searchTitle,
           mediaType: mediaType,
           desc: videoDesc || detailRef.current?.desc || '',
-        });
+        };
+        await saveFavorite(
+          currentSourceRef.current,
+          currentIdRef.current,
+          favorite
+        );
         setFavorited(true);
       }
     } catch (err) {
