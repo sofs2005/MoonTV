@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 
-import { getAvailableApiSites, getCacheTime } from '@/lib/config';
+import {
+  getAvailableApiSites,
+  getAvailableAudioApiSites,
+  getCacheTime,
+} from '@/lib/config';
 import { getDetailFromApi } from '@/lib/downstream';
 
 export const runtime = 'nodejs';
@@ -19,8 +23,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    const apiSites = await getAvailableApiSites();
-    const apiSite = apiSites.find((site) => site.key === sourceCode);
+    const videoApiSites = await getAvailableApiSites();
+    const audioApiSites = await getAvailableAudioApiSites();
+    const allApiSites = [
+      ...videoApiSites,
+      ...(audioApiSites as any), // Use type assertion to merge
+    ];
+    const apiSite = allApiSites.find((site) => site.key === sourceCode);
 
     if (!apiSite) {
       return NextResponse.json({ error: '无效的API来源' }, { status: 400 });

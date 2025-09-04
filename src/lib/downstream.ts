@@ -199,6 +199,12 @@ export async function getDetailFromApi(
   apiSite: ApiSite,
   id: string
 ): Promise<SearchResult> {
+  if (apiSite.key === 'ximalaya') {
+    // This is a special case for Ximalaya, where the `id` is an albumId.
+    // We need to fetch the track list for the album.
+    return _getXimalayaAlbumDetail(apiSite as unknown as ApiAudioSite, id);
+  }
+
   if (apiSite.detail) {
     return handleSpecialSourceDetail(id, apiSite);
   }
@@ -357,6 +363,17 @@ interface XimalayaSearchItem {
   Nickname: string;
 }
 
+interface XimalayaAlbumItem {
+  albumTitle: string;
+  trackTotalCount: number;
+  data: XimalayaTrackItem[];
+}
+
+interface XimalayaTrackItem {
+  trackId: number;
+  title: string;
+}
+
 interface NeteaseSearchItem {
   title: string;
   singer: string;
@@ -364,6 +381,45 @@ interface NeteaseSearchItem {
   link: string;
   music_url: string;
   lrc: string;
+}
+
+interface XimalayaTrackDetailItem {
+  code: number;
+  msg: string;
+  nickname: string;
+  categoryName: string;
+  title: string;
+  cover: string;
+  link: string;
+  url: string;
+}
+
+export async function getXimalayaTrackDetail(
+  apiSite: ApiAudioSite,
+  trackId: string
+): Promise<XimalayaTrackDetailItem> {
+  const apiKey = process.env.XIMALAYA_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      `API key for ${apiSite.name} not found in environment variables.`
+    );
+  }
+
+  const url = new URL(apiSite.api);
+  url.searchParams.append('trackId', trackId);
+  url.searchParams.append('key', apiKey);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch track details from ${apiSite.name}`);
+  }
+
+  const data: XimalayaTrackDetailItem = await response.json();
+  if (!data || data.code !== 200) {
+    throw new Error('Invalid track detail format');
+  }
+
+  return data;
 }
 
 async function _searchXimalaya(
@@ -398,6 +454,51 @@ async function _searchXimalaya(
     episodes: [], // 详情页再获取
     type_name: 'audiobook',
   }));
+}
+
+async function _getXimalayaAlbumDetail(
+  apiSite: ApiAudioSite,
+  albumId: string
+): Promise<SearchResult> {
+  const apiKey = process.env.XIMALAYA_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      `API key for ${apiSite.name} not found in environment variables.`
+    );
+  }
+
+  const url = new URL(apiSite.api);
+  url.searchParams.append('albumId', albumId);
+  url.searchParams.append('key', apiKey);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch album details from ${apiSite.name}`);
+  }
+
+  const data: XimalayaAlbumItem = await response.json();
+  if (!data || !Array.isArray(data.data)) {
+    throw new Error('Invalid album detail format');
+  }
+
+  // Transform the track list into the Episode format
+  const episodes = data.data.map((track) => ({
+    name: track.title,
+    url: track.trackId.toString(), // Use trackId as the 'url' for now
+  }));
+
+  return {
+    id: albumId,
+    title: data.albumTitle,
+    poster: '', // No poster in album detail, might need to get from search result
+    source: apiSite.key,
+    source_name: apiSite.name,
+    desc: '',
+    class: '有声书',
+    year: 'N/A',
+    episodes,
+    type_name: 'audiobook',
+  };
 }
 
 async function _searchNetease(

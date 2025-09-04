@@ -21,6 +21,8 @@ interface VideoInfo {
 }
 
 interface EpisodeSelectorProps {
+  /** 媒体类型 */
+  mediaType?: 'video' | 'audiobook' | 'music';
   /** 总集数 */
   totalEpisodes: number;
   /** 每页显示多少集，默认 50 */
@@ -46,6 +48,7 @@ interface EpisodeSelectorProps {
  * 选集组件，支持分页、自动滚动聚焦当前分页标签，以及换源功能。
  */
 const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
+  mediaType = 'video',
   totalEpisodes,
   episodesPerPage = 50,
   value = 1,
@@ -319,7 +322,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
               }
             `.trim()}
           >
-            选集
+            {mediaType === 'audiobook' ? '选轨' : '选集'}
           </div>
         )}
         <div
@@ -564,7 +567,8 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                             </span>
                             {source.episodes.length > 1 && (
                               <span className='text-xs text-gray-500 dark:text-gray-400 font-medium'>
-                                {source.episodes.length} 集
+                                {source.episodes.length}{' '}
+                                {mediaType === 'audiobook' ? '轨' : '集'}
                               </span>
                             )}
                           </div>

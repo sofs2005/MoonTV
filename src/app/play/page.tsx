@@ -1897,6 +1897,7 @@ function PlayPageClient() {
                 <EpisodeSelector
                   totalEpisodes={totalEpisodes}
                   value={currentEpisodeIndex + 1}
+                  mediaType={mediaType}
                   onChange={handleEpisodeChange}
                   onSourceChange={handleSourceChange}
                   currentSource={currentSource}
