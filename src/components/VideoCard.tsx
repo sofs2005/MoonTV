@@ -115,6 +115,15 @@ export default function VideoCard({
       : 'tv'
     : type;
 
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
   // 获取收藏状态
   useEffect(() => {
     if (from === 'douban' || !actualSource || !actualId) return;
@@ -290,14 +299,18 @@ export default function VideoCard({
         {/* 骨架屏 */}
         {!isLoading && <ImagePlaceholder aspectRatio='aspect-[2/3]' />}
         {/* 图片 */}
-        <Image
-          src={processImageUrl(actualPoster)}
-          alt={actualTitle}
-          fill
-          className='object-cover'
-          referrerPolicy='no-referrer'
-          onLoadingComplete={() => setIsLoading(true)}
-        />
+        {isValidUrl(actualPoster) ? (
+          <Image
+            src={processImageUrl(actualPoster)}
+            alt={actualTitle}
+            fill
+            className='object-cover'
+            referrerPolicy='no-referrer'
+            onLoad={() => setIsLoading(true)}
+          />
+        ) : (
+          <ImagePlaceholder aspectRatio='aspect-[2/3]' />
+        )}
 
         {/* 悬浮遮罩 */}
         <div className='absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100' />
