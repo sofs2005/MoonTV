@@ -1130,6 +1130,7 @@ function PlayPageClient() {
         total_time: Math.floor(duration),
         save_time: Date.now(),
         search_title: searchTitle,
+        mediaType: mediaType,
       });
 
       lastSaveTimeRef.current = Date.now();
