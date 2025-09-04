@@ -1996,7 +1996,11 @@ function PlayPageClient() {
                       />
                       <h3 className='text-white text-lg font-semibold mb-4 text-center'>
                         {videoTitle} -{' '}
-                        {detail?.episodes[currentEpisodeIndex]?.name || ''}
+                        {detail?.episodes[currentEpisodeIndex] &&
+                          typeof detail?.episodes[currentEpisodeIndex] === 'object'
+                          ? (detail?.episodes[currentEpisodeIndex] as Episode)
+                            .name
+                          : ''}
                       </h3>
                       <audio
                         ref={audioPlayerRef}
