@@ -89,8 +89,9 @@ function PlayPageClient() {
   }, [blockAdEnabled]);
 
   // 视频基本信息
-  const [mediaType] = useState(
-    (searchParams.get('type') as 'video' | 'audiobook' | 'music') || 'video'
+  const [mediaType, setMediaType] = useState(
+    (searchParams.get('mediaType') as 'video' | 'audiobook' | 'music') ||
+    'video'
   );
   const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || '');
   const [videoYear, setVideoYear] = useState(searchParams.get('year') || '');
@@ -604,9 +605,11 @@ function PlayPageClient() {
       id: string
     ): Promise<SearchResult[]> => {
       try {
-        const detailResponse = await fetch(
-          `/api/detail?source=${source}&id=${id}`
-        );
+        const apiUrl =
+          mediaType === 'audiobook'
+            ? `/api/track-detail?source=${source}&id=${id}`
+            : `/api/detail?source=${source}&id=${id}`;
+        const detailResponse = await fetch(apiUrl);
         if (!detailResponse.ok) {
           throw new Error('获取视频详情失败');
         }
@@ -624,7 +627,9 @@ function PlayPageClient() {
       // 根据搜索词获取全部源信息
       try {
         const response = await fetch(
-          `/api/search?q=${encodeURIComponent(query.trim())}`
+          `/api/search?q=${encodeURIComponent(
+            query.trim()
+          )}&type=${mediaType}`
         );
         if (!response.ok) {
           throw new Error('搜索失败');
@@ -743,6 +748,9 @@ function PlayPageClient() {
       newUrl.searchParams.set('id', detailData.id);
       newUrl.searchParams.set('year', detailData.year);
       newUrl.searchParams.set('title', detailData.title);
+      if (mediaType) {
+        newUrl.searchParams.set('mediaType', mediaType);
+      }
       newUrl.searchParams.delete('prefer');
       window.history.replaceState({}, '', newUrl.toString());
 
@@ -1179,7 +1187,7 @@ function PlayPageClient() {
   };
 
   useEffect(() => {
-    if (mediaType === 'music' || !videoUrl || loading) {
+    if (mediaType !== 'video' || !videoUrl || loading) {
       return;
     }
     if (
@@ -1757,7 +1765,7 @@ function PlayPageClient() {
 
   return (
     <PageLayout activePath='/play'>
-      {mediaType === 'music' ? (
+      {mediaType === 'music' || mediaType === 'audiobook' ? (
         <div className='flex items-center justify-center min-h-screen'>
           <div className='w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8'>
             <img
@@ -1769,9 +1777,9 @@ function PlayPageClient() {
               {videoTitle}
             </h2>
             <p className='text-gray-500 dark:text-gray-400 mb-4'>
-              {searchParams.get('desc')}
+              {detail?.source_name}
             </p>
-            <audio controls src={videoUrl} className='w-full'>
+            <audio controls src={videoUrl} className='w-full' autoPlay>
               Your browser does not support the audio element.
             </audio>
           </div>

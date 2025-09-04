@@ -353,6 +353,7 @@ function SearchPageClient() {
                           source={item.source}
                           source_name={item.source_name}
                           douban_id={item.douban_id?.toString()}
+                          mediaType={searchType}
                           query={
                             queryFromUrl.trim() !== item.title
                               ? queryFromUrl.trim()
@@ -394,7 +395,7 @@ function SearchPageClient() {
                   <div key={item} className='relative group'>
                     <button
                       onClick={() => {
-                        setSearchQuery(item);
+                        setInputValue(item);
                         router.push(
                           `/search?q=${encodeURIComponent(item.trim())}`
                         );
