@@ -2028,12 +2028,12 @@ function PlayPageClient() {
                   {detail?.type_name && <span>{detail.type_name}</span>}
                 </div>
                 {/* 剧情简介 */}
-                {detail?.desc && (
+                {(detail?.desc || videoDesc) && (
                   <div
                     className='mt-0 text-base leading-relaxed opacity-90 overflow-y-auto pr-2 flex-1 min-h-0 scrollbar-hide'
                     style={{ whiteSpace: 'pre-line' }}
                   >
-                    {detail.desc || videoDesc}
+                    {detail?.desc || videoDesc}
                   </div>
                 )}
               </div>
