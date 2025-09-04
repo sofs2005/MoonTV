@@ -108,6 +108,7 @@ export default function VideoCard({
   const actualEpisodes = aggregateData?.mostFrequentEpisodes ?? episodes;
   const actualYear = aggregateData?.first.year ?? year;
   const actualQuery = query || '';
+  const actualDesc = aggregateData?.first.desc ?? items?.[0]?.desc ?? '';
   const actualSearchType = isAggregate
     ? aggregateData?.first.episodes?.length === 1
       ? 'movie'
@@ -202,12 +203,15 @@ export default function VideoCard({
     const posterParam = actualPoster
       ? `&poster=${encodeURIComponent(actualPoster)}`
       : '';
+    const descParam = actualDesc
+      ? `&desc=${encodeURIComponent(actualDesc)}`
+      : '';
 
     if (from === 'douban') {
       router.push(
         `/play?title=${encodeURIComponent(actualTitle.trim())}${actualYear ? `&year=${actualYear}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''
-        }${mediaTypeParam}${posterParam}`
+        }${mediaTypeParam}${posterParam}${descParam}`
       );
     } else if (actualSource && actualId) {
       router.push(
@@ -216,7 +220,7 @@ export default function VideoCard({
         )}${actualYear ? `&year=${actualYear}` : ''}${isAggregate ? '&prefer=true' : ''
         }${actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
         }${actualSearchType ? `&stype=${actualSearchType}` : ''
-        }${mediaTypeParam}${posterParam}`
+        }${mediaTypeParam}${posterParam}${descParam}`
       );
     }
   }, [
@@ -231,6 +235,7 @@ export default function VideoCard({
     actualSearchType,
     mediaType,
     actualPoster,
+    actualDesc,
   ]);
 
   const config = useMemo(() => {

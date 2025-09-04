@@ -98,6 +98,9 @@ function PlayPageClient() {
   const [videoCover, setVideoCover] = useState(
     searchParams.get('poster') || ''
   );
+  const [videoDesc, setVideoDesc] = useState(
+    searchParams.get('desc') || ''
+  );
   // 当前源和ID
   const [currentSource, setCurrentSource] = useState(
     searchParams.get('source') || ''
@@ -441,6 +444,7 @@ function PlayPageClient() {
           trackData.episodes[0].url
         ) {
           newUrl = trackData.episodes[0].url;
+          setIsVideoLoading(false); // 音频URL获取成功，隐藏加载遮罩
         } else {
           throw new Error('Invalid response format from track-detail');
         }
@@ -772,6 +776,7 @@ function PlayPageClient() {
       setVideoYear(detailData.year);
       setVideoTitle(detailData.title || videoTitleRef.current);
       setVideoCover(detailData.poster || videoCover);
+      setVideoDesc(detailData.desc || videoDesc);
       setDetail(detailData);
       if (currentEpisodeIndex >= detailData.episodes.length) {
         setCurrentEpisodeIndex(0);
@@ -859,8 +864,10 @@ function PlayPageClient() {
   ) => {
     try {
       // 显示换源加载状态
-      setVideoLoadingStage('sourceChanging');
-      setIsVideoLoading(true);
+      if (mediaType === 'video') {
+        setVideoLoadingStage('sourceChanging');
+        setIsVideoLoading(true);
+      }
 
       // 记录当前播放进度（仅在同一集数切换时恢复）
       const currentPlayTime = artPlayerRef.current?.currentTime || 0;
@@ -2026,7 +2033,7 @@ function PlayPageClient() {
                     className='mt-0 text-base leading-relaxed opacity-90 overflow-y-auto pr-2 flex-1 min-h-0 scrollbar-hide'
                     style={{ whiteSpace: 'pre-line' }}
                   >
-                    {detail.desc}
+                    {detail.desc || videoDesc}
                   </div>
                 )}
               </div>

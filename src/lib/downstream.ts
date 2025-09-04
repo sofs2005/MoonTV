@@ -362,6 +362,7 @@ interface XimalayaSearchItem {
   cover: string;
   type: string;
   Nickname: string;
+  intro?: string;
 }
 
 interface XimalayaAlbumItem {
@@ -477,7 +478,7 @@ async function _searchXimalaya(
     poster: item.cover,
     source: apiSite.key,
     source_name: apiSite.name,
-    desc: `作者: ${item.Nickname}`,
+    desc: item.intro || `作者: ${item.Nickname}`,
     class: item.type,
     year: 'N/A',
     episodes: [], // 详情页再获取
