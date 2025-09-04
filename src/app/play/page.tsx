@@ -201,6 +201,7 @@ function PlayPageClient() {
   const lastSaveTimeRef = useRef<number>(0);
 
   const artPlayerRef = useRef<any>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
 
   // -----------------------------------------------------------------------------
@@ -1086,7 +1087,6 @@ function PlayPageClient() {
   // 保存播放进度
   const saveCurrentPlayProgress = async () => {
     if (
-      !artPlayerRef.current ||
       !currentSourceRef.current ||
       !currentIdRef.current ||
       !videoTitleRef.current ||
@@ -1095,11 +1095,25 @@ function PlayPageClient() {
       return;
     }
 
-    const player = artPlayerRef.current;
-    const currentTime = player.currentTime || 0;
-    const duration = player.duration || 0;
+    let currentTime = 0;
+    let duration = 0;
 
-    // 如果播放时间太短（少于5秒）或者视频时长无效，不保存
+    if (mediaType === 'video' && artPlayerRef.current) {
+      const player = artPlayerRef.current;
+      currentTime = player.currentTime || 0;
+      duration = player.duration || 0;
+    } else if (
+      (mediaType === 'audiobook' || mediaType === 'music') &&
+      audioPlayerRef.current
+    ) {
+      const player = audioPlayerRef.current;
+      currentTime = player.currentTime || 0;
+      duration = player.duration || 0;
+    } else {
+      return;
+    }
+
+    // 如果播放时间太短（少于1秒）或者视频时长无效，不保存
     if (currentTime < 1 || !duration) {
       return;
     }
@@ -1648,6 +1662,61 @@ function PlayPageClient() {
     };
   }, []);
 
+  // Audiobook and Music player specific logic
+  useEffect(() => {
+    const audio = audioPlayerRef.current;
+    if (!audio || mediaType === 'video') return;
+
+    // 1. Volume persistence
+    const savedVolume = localStorage.getItem('audio_player_volume');
+    if (savedVolume) {
+      audio.volume = parseFloat(savedVolume);
+    }
+    const handleVolumeChange = () => {
+      if (audioPlayerRef.current) {
+        localStorage.setItem(
+          'audio_player_volume',
+          String(audioPlayerRef.current.volume)
+        );
+      }
+    };
+
+    // 2. Auto-play next episode (only for audiobooks)
+    const handleEnded = () => {
+      if (mediaType === 'audiobook') {
+        handleNextEpisode();
+      }
+    };
+
+    // 3. Save progress periodically
+    const handleTimeUpdate = () => {
+      const now = Date.now();
+      let interval = 5000; // Default interval
+      if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
+        interval = 10000;
+      }
+      if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'upstash') {
+        interval = 20000;
+      }
+      if (now - lastSaveTimeRef.current > interval) {
+        saveCurrentPlayProgress();
+        lastSaveTimeRef.current = now;
+      }
+    };
+
+    audio.addEventListener('volumechange', handleVolumeChange);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('pause', saveCurrentPlayProgress);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+
+    return () => {
+      audio.removeEventListener('volumechange', handleVolumeChange);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('pause', saveCurrentPlayProgress);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+    };
+  }, [videoUrl, mediaType]);
+
   if (loading) {
     return (
       <PageLayout activePath='/play'>
@@ -1822,6 +1891,7 @@ function PlayPageClient() {
               {detail?.source_name}
             </p>
             <audio
+              ref={audioPlayerRef}
               controls
               src={videoUrl}
               className='w-full'
@@ -1915,6 +1985,7 @@ function PlayPageClient() {
                         {detail?.episodes[currentEpisodeIndex]?.name || ''}
                       </h3>
                       <audio
+                        ref={audioPlayerRef}
                         controls
                         src={videoUrl}
                         className='w-full'
