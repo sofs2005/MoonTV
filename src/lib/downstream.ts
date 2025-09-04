@@ -199,6 +199,7 @@ export async function getDetailFromApi(
   apiSite: ApiSite,
   id: string
 ): Promise<SearchResult> {
+
   if (apiSite.key === 'ximalaya') {
     // This is a special case for Ximalaya, where the `id` is an albumId.
     // We need to fetch the track list for the album.
@@ -394,7 +395,35 @@ interface XimalayaTrackDetailItem {
   url: string;
 }
 
-export async function getXimalayaTrackDetail(
+export async function getXimalayaTrackPlayUrl(
+  apiSite: ApiAudioSite,
+  trackId: string
+): Promise<string> {
+  const apiKey = process.env[apiSite.key_env];
+  if (!apiKey) {
+    throw new Error(
+      `API key for ${apiSite.name} not found in environment variables.`
+    );
+  }
+
+  const url = new URL(apiSite.api);
+  url.searchParams.append('trackId', trackId);
+  url.searchParams.append('key', apiKey);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`Failed to fetch track details from ${apiSite.name}`);
+  }
+
+  const data: XimalayaTrackDetailItem = await response.json();
+  if (!data || data.code !== 200 || !data.url) {
+    throw new Error('Invalid track detail format or missing URL');
+  }
+
+  return data.url;
+}
+
+async function _getXimalayaTrackDetail(
   apiSite: ApiAudioSite,
   trackId: string
 ): Promise<XimalayaTrackDetailItem> {

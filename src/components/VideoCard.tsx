@@ -224,6 +224,7 @@ export default function VideoCard({
     actualQuery,
     actualSearchType,
     mediaType,
+    actualPoster,
   ]);
 
   const config = useMemo(() => {
@@ -316,8 +317,8 @@ export default function VideoCard({
                 onClick={handleToggleFavorite}
                 size={20}
                 className={`transition-all duration-300 ease-out ${favorited
-                    ? 'fill-red-600 stroke-red-600'
-                    : 'fill-transparent stroke-white hover:stroke-red-400'
+                  ? 'fill-red-600 stroke-red-600'
+                  : 'fill-transparent stroke-white hover:stroke-red-400'
                   } hover:scale-[1.1]`}
               />
             )}

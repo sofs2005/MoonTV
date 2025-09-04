@@ -406,7 +406,7 @@ function PlayPageClient() {
   };
 
   // 更新视频地址
-  const updateVideoUrl = (
+  const updateVideoUrl = async (
     detailData: SearchResult | null,
     episodeIndex: number
   ) => {
@@ -418,8 +418,40 @@ function PlayPageClient() {
       setVideoUrl('');
       return;
     }
+
     const episode = detailData.episodes[episodeIndex];
-    const newUrl = typeof episode === 'string' ? episode : episode?.url || '';
+    let newUrl = typeof episode === 'string' ? episode : episode?.url || '';
+
+    if (mediaType === 'audiobook' && newUrl) {
+      try {
+        const response = await fetch(
+          `/api/track-detail?source=${detailData.source}&id=${detailData.id}&trackId=${newUrl}`
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch track URL');
+        }
+        const trackData = await response.json();
+        // The backend now returns a simple object with the url
+        // We need to find the actual URL from the response.
+        // Let's assume the response is { episodes: [{ url: '...' }] }
+        if (
+          trackData &&
+          trackData.episodes &&
+          trackData.episodes[0] &&
+          trackData.episodes[0].url
+        ) {
+          newUrl = trackData.episodes[0].url;
+        } else {
+          throw new Error('Invalid response format from track-detail');
+        }
+      } catch (error) {
+        console.error('Error fetching audiobook track URL:', error);
+        setError('获取音轨播放地址失败');
+        setVideoUrl('');
+        return;
+      }
+    }
+
     if (newUrl !== videoUrl) {
       setVideoUrl(newUrl);
     }
@@ -605,10 +637,13 @@ function PlayPageClient() {
       id: string
     ): Promise<SearchResult[]> => {
       try {
-        const apiUrl =
-          mediaType === 'audiobook'
-            ? `/api/track-detail?source=${source}&id=${id}`
-            : `/api/detail?source=${source}&id=${id}`;
+        let apiUrl;
+        if (mediaType === 'audiobook') {
+          // For audiobooks, the main detail fetch is for the album (track list)
+          apiUrl = `/api/detail?source=${source}&id=${id}`;
+        } else {
+          apiUrl = `/api/detail?source=${source}&id=${id}`;
+        }
         const detailResponse = await fetch(apiUrl);
         if (!detailResponse.ok) {
           throw new Error('获取视频详情失败');
@@ -736,7 +771,7 @@ function PlayPageClient() {
       setCurrentId(detailData.id);
       setVideoYear(detailData.year);
       setVideoTitle(detailData.title || videoTitleRef.current);
-      setVideoCover(detailData.poster);
+      setVideoCover(detailData.poster || videoCover);
       setDetail(detailData);
       if (currentEpisodeIndex >= detailData.episodes.length) {
         setCurrentEpisodeIndex(0);
@@ -1779,7 +1814,13 @@ function PlayPageClient() {
             <p className='text-gray-500 dark:text-gray-400 mb-4'>
               {detail?.source_name}
             </p>
-            <audio controls src={videoUrl} className='w-full' autoPlay>
+            <audio
+              controls
+              src={videoUrl}
+              className='w-full'
+              autoPlay
+              key={videoUrl}
+            >
               Your browser does not support the audio element.
             </audio>
           </div>
