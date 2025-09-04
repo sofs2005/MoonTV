@@ -1800,7 +1800,7 @@ function PlayPageClient() {
 
   return (
     <PageLayout activePath='/play'>
-      {mediaType === 'music' || mediaType === 'audiobook' ? (
+      {mediaType === 'music' ? (
         <div className='flex items-center justify-center min-h-screen'>
           <div className='w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8'>
             <img
@@ -1891,10 +1891,33 @@ function PlayPageClient() {
                   }`}
               >
                 <div className='relative w-full h-[300px] lg:h-full'>
-                  <div
-                    ref={artRef}
-                    className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg'
-                  ></div>
+                  {mediaType === 'video' ? (
+                    <div
+                      ref={artRef}
+                      className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg'
+                    ></div>
+                  ) : (
+                    <div className='w-full h-full bg-black rounded-xl flex flex-col items-center justify-center p-4'>
+                      <img
+                        src={processImageUrl(videoCover)}
+                        alt={videoTitle}
+                        className='w-48 h-48 object-cover rounded-lg mb-4'
+                      />
+                      <h3 className='text-white text-lg font-semibold mb-4 text-center'>
+                        {videoTitle} -{' '}
+                        {detail?.episodes[currentEpisodeIndex]?.name || ''}
+                      </h3>
+                      <audio
+                        controls
+                        src={videoUrl}
+                        className='w-full'
+                        autoPlay
+                        key={videoUrl}
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                    </div>
+                  )}
 
                   {/* 换源加载蒙层 */}
                   {isVideoLoading && (
