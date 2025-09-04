@@ -1232,10 +1232,12 @@ function PlayPageClient() {
           title: videoTitleRef.current,
           source_name: detailRef.current?.source_name || '',
           year: detailRef.current?.year,
-          cover: detailRef.current?.poster || '',
+          cover: videoCover || detailRef.current?.poster || '',
           total_episodes: detailRef.current?.episodes.length || 1,
           save_time: Date.now(),
           search_title: searchTitle,
+          mediaType: mediaType,
+          desc: videoDesc || detailRef.current?.desc || '',
         });
         setFavorited(true);
       }
