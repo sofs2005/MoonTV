@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getAvailableAudioApiSites } from '@/lib/config';
 import { getXimalayaTrackPlayUrl } from '@/lib/downstream';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
