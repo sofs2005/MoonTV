@@ -28,7 +28,8 @@ function SearchPageClient() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState('');
+  const queryFromUrl = searchParams.get('q') || '';
+  const [inputValue, setInputValue] = useState(queryFromUrl);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -71,10 +72,10 @@ function SearchPageClient() {
       const bTitle = b[1][0].title || '';
       const aExactMatch = aTitle
         .replaceAll(' ', '')
-        .includes(searchQuery.trim().replaceAll(' ', ''));
+        .includes(queryFromUrl.trim().replaceAll(' ', ''));
       const bExactMatch = bTitle
         .replaceAll(' ', '')
-        .includes(searchQuery.trim().replaceAll(' ', ''));
+        .includes(queryFromUrl.trim().replaceAll(' ', ''));
 
       if (aExactMatch && !bExactMatch) return -1;
       if (!aExactMatch && bExactMatch) return 1;
@@ -99,7 +100,7 @@ function SearchPageClient() {
         }
       }
     });
-  }, [searchResults, searchType, searchQuery]);
+  }, [searchResults, searchType, queryFromUrl]);
 
   useEffect(() => {
     // 无搜索参数时聚焦搜索框
@@ -154,101 +155,79 @@ function SearchPageClient() {
     };
   }, []);
 
-  const fetchSearchResults = useCallback(
-    async (query: string) => {
+  // Sync input value with URL query
+  useEffect(() => {
+    setInputValue(queryFromUrl);
+  }, [queryFromUrl]);
+
+  // Main effect for fetching search results
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      console.log(
+        `Fetching results for query: "${queryFromUrl}", type: "${searchType}"`
+      );
+      if (!queryFromUrl) {
+        setShowResults(false);
+        setSearchResults([]);
+        return;
+      }
+
+      setIsLoading(true);
+      setShowResults(true);
+      addSearchHistory(queryFromUrl);
+
       try {
-        setIsLoading(true);
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(
-            query.trim()
-          )}&type=${searchType}`
-        );
+        const url = `/api/search?q=${encodeURIComponent(
+          queryFromUrl
+        )}&type=${searchType}`;
+        console.log('Requesting URL:', url);
+        const response = await fetch(url);
         const data = await response.json();
         let results = data.results;
+
         if (
           typeof window !== 'undefined' &&
           !(window as any).RUNTIME_CONFIG?.DISABLE_YELLOW_FILTER
         ) {
           results = results.filter((result: SearchResult) => {
             const typeName = result.type_name || '';
-            return !yellowWords.some((word: string) => typeName.includes(word));
+            return !yellowWords.some((word: string) =>
+              typeName.includes(word)
+            );
           });
         }
+
         setSearchResults(
           results.sort((a: SearchResult, b: SearchResult) => {
-            // 优先排序：标题与搜索词完全一致的排在前面
-            const aExactMatch = a.title === query.trim();
-            const bExactMatch = b.title === query.trim();
-
+            const aExactMatch = a.title === queryFromUrl;
+            const bExactMatch = b.title === queryFromUrl;
             if (aExactMatch && !bExactMatch) return -1;
             if (!aExactMatch && bExactMatch) return 1;
-
-            // 如果都匹配或都不匹配，则按原来的逻辑排序
             if (a.year === b.year) {
               return a.title.localeCompare(b.title);
             } else {
-              // 处理 unknown 的情况
-              if (a.year === 'unknown' && b.year === 'unknown') {
-                return 0;
-              } else if (a.year === 'unknown') {
-                return 1; // a 排在后面
-              } else if (b.year === 'unknown') {
-                return -1; // b 排在后面
-              } else {
-                // 都是数字年份，按数字大小排序（大的在前面）
-                return parseInt(a.year) > parseInt(b.year) ? -1 : 1;
-              }
+              if (a.year === 'unknown') return 1;
+              if (b.year === 'unknown') return -1;
+              return parseInt(b.year) - parseInt(a.year);
             }
           })
         );
-        setShowResults(true);
       } catch (error) {
         setSearchResults([]);
       } finally {
         setIsLoading(false);
       }
-    },
-    [searchType]
-  );
+    };
 
-  useEffect(() => {
-    // 当搜索参数变化时更新搜索状态
-    const query = searchParams.get('q');
-    if (query) {
-      setSearchQuery(query);
-      fetchSearchResults(query);
-
-      // 保存到搜索历史 (事件监听会自动更新界面)
-      addSearchHistory(query);
-    } else {
-      setShowResults(false);
-    }
-  }, [searchParams, fetchSearchResults]);
-
-  // Add a new useEffect to re-fetch results when searchType changes
-  useEffect(() => {
-    const query = searchQuery.trim();
-    if (query) {
-      fetchSearchResults(query);
-    }
-  }, [searchType, searchQuery, fetchSearchResults]);
+    fetchSearchResults();
+  }, [queryFromUrl, searchType]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = searchQuery.trim().replace(/\s+/g, ' ');
-    if (!trimmed) return;
-
-    // 回显搜索框
-    setSearchQuery(trimmed);
-    setIsLoading(true);
-    setShowResults(true);
-
-    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-    // 直接发请求
-    fetchSearchResults(trimmed);
-
-    // 保存到搜索历史 (事件监听会自动更新界面)
-    addSearchHistory(trimmed);
+    const trimmed = inputValue.trim().replace(/\s+/g, ' ');
+    if (trimmed && trimmed !== queryFromUrl) {
+      router.push(`/search?q=${encodeURIComponent(trimmed)}`);
+    }
   };
 
   // 返回顶部功能
@@ -276,8 +255,8 @@ function SearchPageClient() {
               <input
                 id='searchInput'
                 type='text'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
                 placeholder='搜索电影、电视剧...'
                 className='w-full h-12 rounded-lg bg-gray-50/80 py-3 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:bg-white border border-gray-200/50 shadow-sm dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-500 dark:focus:bg-gray-700 dark:border-gray-700'
               />
@@ -291,9 +270,11 @@ function SearchPageClient() {
                 { label: '音乐', value: 'music' },
               ]}
               active={searchType}
-              onChange={(value) =>
-                setSearchType(value as 'video' | 'audiobook' | 'music')
-              }
+              onChange={(value) => {
+                const newType = value as 'video' | 'audiobook' | 'music';
+                console.log('Search type changed to:', newType);
+                setSearchType(newType);
+              }}
             />
           </div>
         </div>
@@ -351,8 +332,8 @@ function SearchPageClient() {
                             from='search'
                             items={group}
                             query={
-                              searchQuery.trim() !== group[0].title
-                                ? searchQuery.trim()
+                              queryFromUrl.trim() !== group[0].title
+                                ? queryFromUrl.trim()
                                 : ''
                             }
                           />
@@ -373,8 +354,8 @@ function SearchPageClient() {
                           source_name={item.source_name}
                           douban_id={item.douban_id?.toString()}
                           query={
-                            searchQuery.trim() !== item.title
-                              ? searchQuery.trim()
+                            queryFromUrl.trim() !== item.title
+                              ? queryFromUrl.trim()
                               : ''
                           }
                           year={item.year}
