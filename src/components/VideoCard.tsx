@@ -199,10 +199,15 @@ export default function VideoCard({
 
   const handleClick = useCallback(() => {
     const mediaTypeParam = mediaType ? `&mediaType=${mediaType}` : '';
+    const posterParam = actualPoster
+      ? `&poster=${encodeURIComponent(actualPoster)}`
+      : '';
+
     if (from === 'douban') {
       router.push(
         `/play?title=${encodeURIComponent(actualTitle.trim())}${actualYear ? `&year=${actualYear}` : ''
-        }${actualSearchType ? `&stype=${actualSearchType}` : ''}${mediaTypeParam}`
+        }${actualSearchType ? `&stype=${actualSearchType}` : ''
+        }${mediaTypeParam}${posterParam}`
       );
     } else if (actualSource && actualId) {
       router.push(
@@ -210,7 +215,8 @@ export default function VideoCard({
           actualTitle
         )}${actualYear ? `&year=${actualYear}` : ''}${isAggregate ? '&prefer=true' : ''
         }${actualQuery ? `&stitle=${encodeURIComponent(actualQuery.trim())}` : ''
-        }${actualSearchType ? `&stype=${actualSearchType}` : ''}${mediaTypeParam}`
+        }${actualSearchType ? `&stype=${actualSearchType}` : ''
+        }${mediaTypeParam}${posterParam}`
       );
     }
   }, [

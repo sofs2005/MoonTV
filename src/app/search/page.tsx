@@ -331,6 +331,7 @@ function SearchPageClient() {
                           <VideoCard
                             from='search'
                             items={group}
+                            mediaType={searchType}
                             query={
                               queryFromUrl.trim() !== group[0].title
                                 ? queryFromUrl.trim()
