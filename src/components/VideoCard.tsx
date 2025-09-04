@@ -36,6 +36,7 @@ interface VideoCardProps {
   items?: SearchResult[];
   type?: string;
   mediaType?: 'video' | 'audiobook' | 'music';
+  desc?: string;
 }
 
 export default function VideoCard({
@@ -56,6 +57,7 @@ export default function VideoCard({
   items,
   type = '',
   mediaType,
+  desc,
 }: VideoCardProps) {
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
@@ -108,7 +110,8 @@ export default function VideoCard({
   const actualEpisodes = aggregateData?.mostFrequentEpisodes ?? episodes;
   const actualYear = aggregateData?.first.year ?? year;
   const actualQuery = query || '';
-  const actualDesc = aggregateData?.first.desc ?? items?.[0]?.desc ?? '';
+  const actualDesc =
+    aggregateData?.first.desc ?? items?.[0]?.desc ?? desc ?? '';
   const actualSearchType = isAggregate
     ? aggregateData?.first.episodes?.length === 1
       ? 'movie'

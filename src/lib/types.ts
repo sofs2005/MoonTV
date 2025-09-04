@@ -13,6 +13,7 @@ export interface PlayRecord {
   save_time: number; // 记录保存时间（时间戳）
   search_title: string; // 搜索时使用的标题
   mediaType?: 'video' | 'audiobook' | 'music'; // 媒体类型
+  desc?: string; // 简介
 }
 
 // 收藏数据结构

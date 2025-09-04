@@ -145,6 +145,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
                   }
                   type={record.total_episodes > 1 ? 'tv' : ''}
                   mediaType={record.mediaType}
+                  desc={record.desc}
                 />
               </div>
             );
