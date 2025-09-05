@@ -1677,16 +1677,30 @@ function PlayPageClient() {
     const audio = audioPlayerRef.current;
     if (!audio || mediaType === 'video') return;
 
-    // 1. Volume persistence
+    // 1. Volume and Playback Rate persistence
     const savedVolume = localStorage.getItem('audio_player_volume');
     if (savedVolume) {
       audio.volume = parseFloat(savedVolume);
     }
+    const savedRate = localStorage.getItem('audio_player_rate');
+    if (savedRate) {
+      audio.playbackRate = parseFloat(savedRate);
+    }
+
     const handleVolumeChange = () => {
       if (audioPlayerRef.current) {
         localStorage.setItem(
           'audio_player_volume',
           String(audioPlayerRef.current.volume)
+        );
+      }
+    };
+
+    const handleRateChange = () => {
+      if (audioPlayerRef.current) {
+        localStorage.setItem(
+          'audio_player_rate',
+          String(audioPlayerRef.current.playbackRate)
         );
       }
     };
@@ -1714,16 +1728,33 @@ function PlayPageClient() {
       }
     };
 
+    // Attempt to play on new src
+    const handleCanPlay = () => {
+      audio.play().catch((err) => {
+        console.warn('Audio auto-play failed:', err);
+      });
+    };
+
     audio.addEventListener('volumechange', handleVolumeChange);
+    audio.addEventListener('ratechange', handleRateChange);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('pause', saveCurrentPlayProgress);
     audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('canplay', handleCanPlay);
+
+    // When src changes, load and try to play
+    audio.load();
+    audio.play().catch((err) => {
+      console.warn('Audio auto-play on src change failed:', err);
+    });
 
     return () => {
       audio.removeEventListener('volumechange', handleVolumeChange);
+      audio.removeEventListener('ratechange', handleRateChange);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('pause', saveCurrentPlayProgress);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('canplay', handleCanPlay);
     };
   }, [videoUrl, mediaType]);
 
