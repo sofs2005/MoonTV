@@ -1684,7 +1684,9 @@ function PlayPageClient() {
     }
     const initialSavedRate = localStorage.getItem('audio_player_rate');
     if (initialSavedRate) {
-      audio.playbackRate = parseFloat(initialSavedRate);
+      const rate = parseFloat(initialSavedRate);
+      audio.playbackRate = rate;
+      audio.defaultPlaybackRate = rate;
     }
 
     const handleVolumeChange = () => {
@@ -1699,7 +1701,7 @@ function PlayPageClient() {
     const handleRateChange = () => {
       if (audioPlayerRef.current) {
         const newRate = audioPlayerRef.current.playbackRate;
-        audioPlayerRef.current.defaultPlaybackRate = newRate;
+        audioPlayerRef.current.defaultPlaybackRate = newRate; // 关键修复：持久化播放速率
         localStorage.setItem('audio_player_rate', String(newRate));
       }
     };
@@ -1729,11 +1731,6 @@ function PlayPageClient() {
 
     // Attempt to play on new src
     const handleCanPlay = () => {
-      // Restore playback rate when the new track is ready to play
-      const savedRate = localStorage.getItem('audio_player_rate');
-      if (savedRate) {
-        audio.playbackRate = parseFloat(savedRate);
-      }
       audio.play().catch((err) => {
         console.warn('Audio auto-play failed:', err);
       });
@@ -1747,7 +1744,11 @@ function PlayPageClient() {
     audio.addEventListener('canplay', handleCanPlay);
 
     // When src changes, load and try to play
+    // When src changes, load and try to play
     audio.load();
+    audio.play().catch((err) => {
+      console.warn('Audio auto-play on src change failed:', err);
+    });
 
     return () => {
       audio.removeEventListener('volumechange', handleVolumeChange);
