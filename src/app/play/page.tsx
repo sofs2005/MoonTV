@@ -1730,6 +1730,11 @@ function PlayPageClient() {
 
     // Attempt to play on new src
     const handleCanPlay = () => {
+      // Restore playback rate when the new track is ready to play
+      const savedRate = localStorage.getItem('audio_player_rate');
+      if (savedRate) {
+        audio.playbackRate = parseFloat(savedRate);
+      }
       audio.play().catch((err) => {
         console.warn('Audio auto-play failed:', err);
       });
@@ -1744,9 +1749,6 @@ function PlayPageClient() {
 
     // When src changes, load and try to play
     audio.load();
-    audio.play().catch((err) => {
-      console.warn('Audio auto-play on src change failed:', err);
-    });
 
     return () => {
       audio.removeEventListener('volumechange', handleVolumeChange);
