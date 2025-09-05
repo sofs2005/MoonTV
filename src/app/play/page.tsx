@@ -1698,10 +1698,9 @@ function PlayPageClient() {
 
     const handleRateChange = () => {
       if (audioPlayerRef.current) {
-        localStorage.setItem(
-          'audio_player_rate',
-          String(audioPlayerRef.current.playbackRate)
-        );
+        const newRate = audioPlayerRef.current.playbackRate;
+        audioPlayerRef.current.defaultPlaybackRate = newRate;
+        localStorage.setItem('audio_player_rate', String(newRate));
       }
     };
 
