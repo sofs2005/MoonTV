@@ -1682,9 +1682,9 @@ function PlayPageClient() {
     if (savedVolume) {
       audio.volume = parseFloat(savedVolume);
     }
-    const savedRate = localStorage.getItem('audio_player_rate');
-    if (savedRate) {
-      audio.playbackRate = parseFloat(savedRate);
+    const initialSavedRate = localStorage.getItem('audio_player_rate');
+    if (initialSavedRate) {
+      audio.playbackRate = parseFloat(initialSavedRate);
     }
 
     const handleVolumeChange = () => {
