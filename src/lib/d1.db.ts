@@ -76,7 +76,9 @@ export class D1Storage implements IStorage {
         play_time: result.play_time,
         total_time: result.total_time,
         save_time: result.save_time,
-        search_title: result.search_title || undefined,
+        search_title: result.search_title || '',
+        mediaType: result.mediaType,
+        desc: result.desc,
       };
     } catch (err) {
       console.error('Failed to get play record:', err);
@@ -94,9 +96,9 @@ export class D1Storage implements IStorage {
       await db
         .prepare(
           `
-          INSERT OR REPLACE INTO play_records 
-          (username, key, title, source_name, cover, year, index_episode, total_episodes, play_time, total_time, save_time, search_title)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT OR REPLACE INTO play_records
+          (username, key, title, source_name, cover, year, index_episode, total_episodes, play_time, total_time, save_time, search_title, mediaType, desc)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
         )
         .bind(
@@ -111,7 +113,9 @@ export class D1Storage implements IStorage {
           record.play_time,
           record.total_time,
           record.save_time,
-          record.search_title || null
+          record.search_title || null,
+          record.mediaType || 'video',
+          record.desc || null
         )
         .run();
     } catch (err) {
@@ -145,7 +149,9 @@ export class D1Storage implements IStorage {
           play_time: row.play_time,
           total_time: row.total_time,
           save_time: row.save_time,
-          search_title: row.search_title || undefined,
+          search_title: row.search_title || '',
+          mediaType: row.mediaType,
+          desc: row.desc,
         };
       });
 
@@ -188,6 +194,8 @@ export class D1Storage implements IStorage {
         total_episodes: result.total_episodes,
         save_time: result.save_time,
         search_title: result.search_title,
+        mediaType: result.mediaType,
+        desc: result.desc,
       };
     } catch (err) {
       console.error('Failed to get favorite:', err);
@@ -205,9 +213,9 @@ export class D1Storage implements IStorage {
       await db
         .prepare(
           `
-          INSERT OR REPLACE INTO favorites 
-          (username, key, title, source_name, cover, year, total_episodes, save_time)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT OR REPLACE INTO favorites
+          (username, key, title, source_name, cover, year, total_episodes, save_time, search_title, mediaType, desc)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `
         )
         .bind(
@@ -218,7 +226,10 @@ export class D1Storage implements IStorage {
           favorite.cover,
           favorite.year,
           favorite.total_episodes,
-          favorite.save_time
+          favorite.save_time,
+          favorite.search_title,
+          favorite.mediaType || 'video',
+          favorite.desc || null
         )
         .run();
     } catch (err) {
@@ -248,6 +259,8 @@ export class D1Storage implements IStorage {
           total_episodes: row.total_episodes,
           save_time: row.save_time,
           search_title: row.search_title,
+          mediaType: row.mediaType,
+          desc: row.desc,
         };
       });
 
