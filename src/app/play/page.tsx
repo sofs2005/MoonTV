@@ -424,27 +424,29 @@ function PlayPageClient() {
     }
 
     const episode = detailData.episodes[episodeIndex];
-    let newUrl = typeof episode === 'string' ? episode : episode?.url || '';
+    let urlToSet = typeof episode === 'string' ? episode : episode?.url || '';
 
-    if (mediaType === 'audiobook' && newUrl) {
+    if (mediaType === 'audiobook' && urlToSet) {
       try {
         const response = await fetch(
-          `/api/track-detail?source=${detailData.source}&id=${detailData.id}&trackId=${newUrl}`
+          `/api/track-detail?source=${detailData.source}&id=${detailData.id
+          }&trackId=${urlToSet}`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch track URL');
         }
         const trackData = await response.json();
-        // The backend now returns a simple object with the url
-        // We need to find the actual URL from the response.
-        // Let's assume the response is { episodes: [{ url: '...' }] }
         if (
           trackData &&
           trackData.episodes &&
           trackData.episodes[0] &&
           trackData.episodes[0].url
         ) {
-          newUrl = trackData.episodes[0].url;
+          urlToSet = trackData.episodes[0].url;
+          // 强制转换为 HTTPS 解决混合内容问题
+          if (urlToSet.startsWith('http://')) {
+            urlToSet = urlToSet.replace('http://', 'https://');
+          }
           setIsVideoLoading(false); // 音频URL获取成功，隐藏加载遮罩
         } else {
           throw new Error('Invalid response format from track-detail');
@@ -457,8 +459,8 @@ function PlayPageClient() {
       }
     }
 
-    if (newUrl !== videoUrl) {
-      setVideoUrl(newUrl);
+    if (urlToSet !== videoUrl) {
+      setVideoUrl(urlToSet);
     }
   };
 
