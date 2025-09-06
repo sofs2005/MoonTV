@@ -1325,6 +1325,7 @@ function PlayPageClient() {
         container: artRef.current,
         url: videoUrl,
         poster: videoCover,
+        type: mediaType === 'audiobook' ? 'normal' : undefined,
         volume: 0.7,
         isLive: false,
         muted: false,
@@ -1355,7 +1356,7 @@ function PlayPageClient() {
         moreVideoAttr: {
           crossOrigin: 'anonymous',
         },
-        // HLS 支持配置
+        // HLS and Audio Support Configuration
         customType: {
           m3u8: function (video: HTMLVideoElement, url: string) {
             if (!Hls) {
@@ -1407,6 +1408,9 @@ function PlayPageClient() {
                 }
               }
             });
+          },
+          mp3: function (video: HTMLVideoElement, url: string) {
+            video.src = url;
           },
         },
         icons: {
