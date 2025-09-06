@@ -1094,14 +1094,14 @@ function PlayPageClient() {
     let currentTime = 0;
     let duration = 0;
 
-    if (mediaType === 'video' && artPlayerRef.current) {
+    if (
+      (mediaType === 'video' || mediaType === 'audiobook') &&
+      artPlayerRef.current
+    ) {
       const player = artPlayerRef.current;
       currentTime = player.currentTime || 0;
       duration = player.duration || 0;
-    } else if (
-      (mediaType === 'audiobook' || mediaType === 'music') &&
-      audioPlayerRef.current
-    ) {
+    } else if (mediaType === 'music' && audioPlayerRef.current) {
       const player = audioPlayerRef.current;
       currentTime = player.currentTime || 0;
       duration = player.duration || 0;
@@ -1253,7 +1253,11 @@ function PlayPageClient() {
   };
 
   useEffect(() => {
-    if (mediaType !== 'video' || !videoUrl || loading) {
+    if (
+      (mediaType !== 'video' && mediaType !== 'audiobook') ||
+      !videoUrl ||
+      loading
+    ) {
       return;
     }
     if (
@@ -1672,10 +1676,10 @@ function PlayPageClient() {
     };
   }, []);
 
-  // Audiobook and Music player specific logic
+  // Music player specific logic
   useEffect(() => {
     const audio = audioPlayerRef.current;
-    if (!audio || mediaType === 'video') return;
+    if (!audio || mediaType !== 'music') return;
 
     // 1. Volume and Playback Rate persistence
     const savedVolume = localStorage.getItem('audio_player_volume');
@@ -1701,19 +1705,12 @@ function PlayPageClient() {
     const handleRateChange = () => {
       if (audioPlayerRef.current) {
         const newRate = audioPlayerRef.current.playbackRate;
-        audioPlayerRef.current.defaultPlaybackRate = newRate; // 关键修复：持久化播放速率
+        audioPlayerRef.current.defaultPlaybackRate = newRate;
         localStorage.setItem('audio_player_rate', String(newRate));
       }
     };
 
-    // 2. Auto-play next episode (only for audiobooks)
-    const handleEnded = () => {
-      if (mediaType === 'audiobook') {
-        handleNextEpisode();
-      }
-    };
-
-    // 3. Save progress periodically
+    // 2. Save progress periodically
     const handleTimeUpdate = () => {
       const now = Date.now();
       let interval = 5000; // Default interval
@@ -1738,12 +1735,10 @@ function PlayPageClient() {
 
     audio.addEventListener('volumechange', handleVolumeChange);
     audio.addEventListener('ratechange', handleRateChange);
-    audio.addEventListener('ended', handleEnded);
     audio.addEventListener('pause', saveCurrentPlayProgress);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('canplay', handleCanPlay);
 
-    // When src changes, load and try to play
     // When src changes, load and try to play
     audio.load();
     audio.play().catch((err) => {
@@ -1753,7 +1748,6 @@ function PlayPageClient() {
     return () => {
       audio.removeEventListener('volumechange', handleVolumeChange);
       audio.removeEventListener('ratechange', handleRateChange);
-      audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('pause', saveCurrentPlayProgress);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('canplay', handleCanPlay);
@@ -2011,38 +2005,10 @@ function PlayPageClient() {
                   }`}
               >
                 <div className='relative w-full h-[300px] lg:h-full'>
-                  {mediaType === 'video' ? (
-                    <div
-                      ref={artRef}
-                      className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg'
-                    ></div>
-                  ) : (
-                    <div className='w-full h-full bg-black rounded-xl flex flex-col items-center justify-center p-4'>
-                      <img
-                        src={processImageUrl(videoCover)}
-                        alt={videoTitle}
-                        className='w-48 h-48 object-cover rounded-lg mb-4'
-                      />
-                      <h3 className='text-white text-lg font-semibold mb-4 text-center'>
-                        {videoTitle} -{' '}
-                        {detail?.episodes[currentEpisodeIndex] &&
-                          typeof detail?.episodes[currentEpisodeIndex] === 'object'
-                          ? (detail?.episodes[currentEpisodeIndex] as Episode)
-                            .name
-                          : ''}
-                      </h3>
-                      <audio
-                        ref={audioPlayerRef}
-                        controls
-                        src={videoUrl}
-                        className='w-full mt-4'
-                        autoPlay
-                        key={videoUrl}
-                      >
-                        Your browser does not support the audio element.
-                      </audio>
-                    </div>
-                  )}
+                  <div
+                    ref={artRef}
+                    className='bg-black w-full h-full rounded-xl overflow-hidden shadow-lg'
+                  ></div>
 
                   {/* 换源加载蒙层 */}
                   {isVideoLoading && (
