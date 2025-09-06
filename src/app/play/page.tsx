@@ -2035,7 +2035,7 @@ function PlayPageClient() {
                         ref={audioPlayerRef}
                         controls
                         src={videoUrl}
-                        className='w-full'
+                        className='w-full mt-4'
                         autoPlay
                         key={videoUrl}
                       >
