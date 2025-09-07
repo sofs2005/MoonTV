@@ -26,11 +26,10 @@ export async function GET(request: Request) {
   try {
     const videoApiSites = await getAvailableApiSites();
     const audioApiSites = await getAvailableAudioApiSites();
-    const allApiSites = [
-      ...videoApiSites,
-      ...(audioApiSites as ApiSite[]), // Use type assertion to merge
-    ];
-    const apiSite = allApiSites.find((site) => site.key === sourceCode);
+    let apiSite = videoApiSites.find((site) => site.key === sourceCode);
+    if (!apiSite) {
+      apiSite = audioApiSites.find((site) => site.key === sourceCode) as ApiSite | undefined;
+    }
 
     if (!apiSite) {
       return NextResponse.json({ error: '无效的API来源' }, { status: 400 });
