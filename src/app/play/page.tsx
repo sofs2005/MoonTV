@@ -6,8 +6,10 @@ import Hls from 'hls.js';
 import { Heart } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
-import Plyr from 'plyr-react';
+import dynamic from 'next/dynamic';
 import 'plyr-react/plyr.css';
+
+const Plyr = dynamic(() => import('plyr-react'), { ssr: false });
 
 import {
   deleteFavorite,
