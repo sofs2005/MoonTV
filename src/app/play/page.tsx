@@ -1325,7 +1325,7 @@ function PlayPageClient() {
         container: artRef.current,
         url: videoUrl,
         poster: videoCover,
-        type: mediaType === 'audiobook' ? 'normal' : undefined,
+        ...(mediaType === 'audiobook' && { type: 'normal' }),
         volume: 0.7,
         isLive: false,
         muted: false,
