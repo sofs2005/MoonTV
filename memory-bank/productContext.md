@@ -13,7 +13,7 @@ This file provides a high-level overview of the project and the expected product
 
 *   **Multi-source Aggregated Search**: Built-in support for dozens of free resource sites, returning results from all sources with a single search.
 *   **Rich Detail Pages**: Displays complete information including episode lists, cast, year, and descriptions.
-*   **Smooth Online Playback**: Integrated with HLS.js & ArtPlayer.
+*   **Smooth Online Playback**: Integrated with Plyr-React & HLS.js.
 *   **Favorites + Continue Watching**: Supports Redis/D1/Upstash for storage, allowing progress synchronization across multiple devices.
 *   **PWA (Progressive Web App)**: Enables offline caching and installation to desktop/home screen for a native-like mobile experience.
 *   **Responsive Layout**: Adapts to various screen sizes with a desktop sidebar and mobile bottom navigation.
@@ -25,7 +25,7 @@ This file provides a high-level overview of the project and the expected product
 *   **Frontend Framework**: Next.js 14 (App Router)
 *   **UI & Styling**: Tailwind CSS 3
 *   **Language**: TypeScript 4
-*   **Player**: ArtPlayer, HLS.js
+*   **Player**: Plyr-React, HLS.js
 *   **Code Quality**: ESLint, Prettier, Jest
 *   **Deployment**: Docker, Vercel, Cloudflare Pages
 *   **Data Storage**: Supports local storage, native Redis, Cloudflare D1, and Upstash Redis.

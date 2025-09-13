@@ -153,24 +153,84 @@ div[data-media-provider] video {
   object-fit: contain;
 }
 
-.art-poster {
-  background-size: contain !important; /* 使图片完整展示 */
-  background-position: center center !important; /* 居中显示 */
-  background-repeat: no-repeat !important; /* 防止重复 */
-  background-color: #000 !important; /* 其余区域填充为黑色 */
+/* Plyr 播放器自定义样式 */
+.plyr {
+  --plyr-color-main: #22c55e;
+  --plyr-video-background: #000000;
+  --plyr-video-control-background: rgba(0, 0, 0, 0.8);
+  --plyr-control-icon: #ffffff;
+  --plyr-control-background-hover: rgba(34, 197, 94, 0.8);
+  --plyr-control-spacing: 10px;
+  --plyr-font-size-base: 15px;
 }
 
-/* 隐藏移动端竖屏时的 pip 按钮 */
+.plyr__control--overlaid {
+  background: var(--plyr-color-main);
+}
+
+.plyr__control:hover {
+  background: var(--plyr-control-background-hover);
+}
+
+.plyr__control.plyr__tab-focus,
+.plyr__control:hover,
+.plyr__control[aria-expanded='true'] {
+  background: var(--plyr-control-background-hover);
+}
+
+.plyr__progress__buffer {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.plyr__progress--played,
+.plyr__volume__display {
+  background: var(--plyr-color-main);
+}
+
+.plyr__progress--played {
+  background: var(--plyr-color-main) !important;
+}
+
+.plyr__volume--display {
+  background: var(--plyr-color-main) !important;
+}
+
+/* 音频播放器样式 */
+.plyr--audio {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.plyr--audio .plyr__controls {
+  background: transparent;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.plyr--audio .plyr__control--overlaid {
+  display: none;
+}
+
+/* 视频播放器样式 */
+.plyr--video {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 隐藏移动端的某些控件 */
 @media (max-width: 768px) {
-  .art-control-pip {
+  .plyr__control[data-plyr="pip"] {
     display: none !important;
   }
 
-  .art-control-fullscreenWeb {
+  .plyr__volume {
     display: none !important;
   }
 
-  .art-control-volume {
-    display: none !important;
+  /* 移动端音频播放器优化 */
+  .plyr--audio .plyr__controls {
+    padding: 6px;
   }
 }

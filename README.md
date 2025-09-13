@@ -22,7 +22,7 @@
 
 - 🔍 **多源聚合搜索**：内置数十个免费资源站点，一次搜索立刻返回全源结果。
 - 📄 **丰富详情页**：支持剧集列表、演员、年份、简介等完整信息展示。
-- ▶️ **流畅在线播放**：集成 HLS.js & ArtPlayer。
+- ▶️ **流畅在线播放**：集成 Plyr-React & HLS.js。
 - ❤️ **收藏 + 继续观看**：支持 Redis/D1/Upstash 存储，多端同步进度。
 - 📱 **PWA**：离线缓存、安装到桌面/主屏，移动端原生体验。
 - 🌗 **响应式布局**：桌面侧边栏 + 移动底部导航，自适应各种屏幕尺寸。
@@ -57,7 +57,7 @@
 | 前端框架  | [Next.js 14](https://nextjs.org/) · App Router                                                        |
 | UI & 样式 | [Tailwind&nbsp;CSS 3](https://tailwindcss.com/)                                                       |
 | 语言      | TypeScript 4                                                                                          |
-| 播放器    | [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) · [HLS.js](https://github.com/video-dev/hls.js/) |
+| 播放器    | [Plyr-React](https://github.com/chintan9/plyr-react) · [HLS.js](https://github.com/video-dev/hls.js/) |
 | 代码质量  | ESLint · Prettier · Jest                                                                              |
 | 部署      | Docker · Vercel · CloudFlare pages                                                                    |
 
@@ -323,6 +323,6 @@ MoonTV 支持标准的苹果 CMS V10 API 格式。
 
 - [ts-nextjs-tailwind-starter](https://github.com/theodorusclarence/ts-nextjs-tailwind-starter) — 项目最初基于该脚手架。
 - [LibreTV](https://github.com/LibreSpark/LibreTV) — 由此启发，站在巨人的肩膀上。
-- [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) — 提供强大的网页视频播放器。
+- [Plyr-React](https://github.com/chintan9/plyr-react) — 提供现代化的 React 视频播放器。
 - [HLS.js](https://github.com/video-dev/hls.js) — 实现 HLS 流媒体在浏览器中的播放支持。
 - 感谢所有提供免费影视接口的站点。
